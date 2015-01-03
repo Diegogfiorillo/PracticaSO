@@ -8,6 +8,10 @@
 #include <sys/wait.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <pthread.h>
+#include <errno.h>
+#include <semaphore.h>
+#include <sys/select.h>
 
 //Funcion para crear un socket servidor
 int crearSocketServidor(char* puertoCliente)
@@ -93,4 +97,56 @@ pthread_t mythreadNombre;
             "    ╔═════════════════════════╗ \n    ║Saludos,Federico y Diego.║ \n    ╚═════════════════════════╝");
     //Porque era hermoso
     
+
+//Serializar!
+char* serializar_datos(char* codigoASerializar){
+ 
+    char *paqueteSerializado = malloc(strlen(codigoASerializar));    //Malloc del tamaño a guardar
+ 
+    int offset = 0;
+    int size_to_send;
     
+    size_to_send = sizeof(u_int32_t);
+    memcpy(paqueteSerializado+offset, strlen(codigoASerializar),size_to_send);
+    offset +=size_to_send;
+ 
+    size_to_send = strlen(codigoASerializar);
+    memcpy(paqueteSerializado+offset, codigoASerializar, size_to_send);
+    offset+= size_to_send;
+ 
+    printf(" %s\n", paqueteSerializado); //Chequeamos que este todo ok
+ 
+    return paqueteSerializado;
+}
+
+//Deserializar
+package* deserializar_paquete(char* paqueteSerializado)
+{
+ 
+    u_int32_t size;
+    int offset = 0;
+    package* paquete = malloc(sizeof(package));
+     memcpy(&size,paqueteSerializado,sizeof(u_int32_t));
+    paquete->size = size;
+    offset+=sizeof(u_int32_t);
+    memcpy(paquete->codigo,paqueteSerializado+offset,paquete->size);
+    return paquete;
+}
+
+
+//Sendall
+int sendall(int s, char* buffer, int* len)          //me aseguro que se envie toda la informacion
+{
+    int total = 0;
+    int bytesleft = *len;
+    int n;
+    while(total<*len)
+    {
+        n = send(s, buffer+total, bytesleft, 0);
+        if(n==-1) break;
+        total+=n;
+        bytesleft-=n;
+    }
+    *len = total;
+    return n==-1?-1:0;
+}
