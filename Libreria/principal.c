@@ -150,3 +150,10 @@ int sendall(int s, char* buffer, int* len)          //me aseguro que se envie to
     *len = total;
     return n==-1?-1:0;
 }
+
+//HANDSHAKE
+
+socket_header handshake;
+	handshake.size = sizeof(socket_header);
+	handshake.code = '?'; //El que se comunique al servidor
+send(socketUMV, &handshake, sizeof(socket_header), 0) 
