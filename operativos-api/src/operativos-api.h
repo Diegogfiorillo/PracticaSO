@@ -42,3 +42,12 @@ int aceptarConexion(struct sockaddr_in, int);
 
 //Log Files
 t_log* crearLogFile(char*,char*);
+
+//Semaforos
+void crearSemaforo(sem_t, t_log*);
+void destruirSemaforo(sem_t, t_log*);
+
+//Serializacion
+char* serializar_datos(char*);
+void* deserializar_paquete(char*,int);
+
