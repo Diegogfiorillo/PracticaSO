@@ -1,8 +1,8 @@
 /*
- * sockets-api.h
+ * operativos-api.h
  *
  *  Created on: 29/12/2014
- *      Author: federico
+ *      Author: FC
  */
 
 #ifndef SOCKETS_API_H_

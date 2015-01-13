@@ -1,8 +1,8 @@
 /*
  ============================================================================
- Name        : sockets-api.c
- Author      : 
- Version     :
+ Name        : operativos-api.c
+ Author      : FC
+ Version     : 1.0.0
  Copyright   : Your copyright notice
  Description : Hello World in C, Ansi-style
  ============================================================================
