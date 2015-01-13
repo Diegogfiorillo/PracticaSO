@@ -104,6 +104,39 @@ int aceptarConexion(struct sockaddr_in client, int listeningSocket)
 	return socketCliente; //Nuevo socket de conexion con cliente
 }
 
+int enviarBytes(int socket, void* buffer, int len)          //me aseguro que se envie toda la informacion
+{
+    int total = 0;
+    int bytesLeft = len;
+    int n;
+    while(total<len)
+    {
+        n = send(socket, buffer+total, bytesLeft, 0);
+        if(n==-1) break;
+        total+=n;
+        bytesLeft-=n;
+    }
+    len = total;
+    return n==-1?-1:0;
+}
+
+int recibirBytes(int socket, void* bufferSalida, int lenBuffer)
+{
+	int total = 0;
+	int bytesLeft = lenBuffer;
+	int recibido;
+	while(total<lenBuffer)
+	{
+		recibido = recv(socket,bufferSalida,lenBuffer,0);
+		if(recibido==-1) break;
+		total+=recibido;
+		bytesLeft-=recibido;
+	}
+	lenBuffer = total;
+	return recibido==-1?-1:0;
+}
+
+
 /*
  * 		LOG FILES
  */
@@ -163,22 +196,18 @@ char* serializar_datos(char* codigoASerializar){
 //Deserializar
 
 /*
- * La convencion de los paquetes serializados es tamanioAtributo1|atributo1|tamanioAtributo2|atributo2
+ * La convencion de los paquetes serializados es tamanioAtributo1|atributo1
  * sin las barras ni espacios
  */
-void* deserializar_paquete(char* paqueteSerializado, int cantAtributos) //Todo terminar esto de los atributos
+package* deserializar_paquete(char* paqueteSerializado)
 {
 
     u_int32_t size;
     int offset = 0;
-    void* paquete = malloc(sizeof(package));
-     memcpy(&size,paqueteSerializado,sizeof(u_int32_t));
+    package* paquete = malloc(sizeof(package));
+    memcpy(&size,paqueteSerializado,sizeof(u_int32_t));
     paquete->size = size;
     offset+=sizeof(u_int32_t);
     memcpy(paquete->codigo,paqueteSerializado+offset,paquete->size);
     return paquete;
 }
-
-
-//ToDo hacer dsps lo demas que falta
-

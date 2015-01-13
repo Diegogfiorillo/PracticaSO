@@ -27,18 +27,20 @@
 #include <commons/error.h>
 #include <commons/collections/list.h>
 
+typedef struct
+{
+	int size;
+	char* codigo;
+
+}package;
 
 //Sockets
 int crearSocketServidor(char*);
 int crearSocketCliente(char*, char*);
 struct sockaddr_in escucharConexiones(int);
 int aceptarConexion(struct sockaddr_in, int);
-
-/*
- *
- *ToDo faltan las funciones de enviar y recibir informacion
- *
- */
+int enviarBytes(int, void*, int);
+int recibirBytes(int, void*, int);
 
 //Log Files
 t_log* crearLogFile(char*,char*);
@@ -49,5 +51,5 @@ void destruirSemaforo(sem_t, t_log*);
 
 //Serializacion
 char* serializar_datos(char*);
-void* deserializar_paquete(char*,int);
+void* deserializar_paquete(char*);
 
