@@ -51,5 +51,5 @@ void destruirSemaforo(sem_t, t_log*);
 
 //Serializacion
 char* serializar_datos(char*);
-void* deserializar_paquete(char*);
+package* deserializar_paquete(char*);
 
