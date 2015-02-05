@@ -25,7 +25,7 @@ int limpiarPaquete() {
 
 void test_serializacion()
 {
-	package* paquete = inicializarPaquete();
+	inicializarPaquete();
 	char* cadenaSerializada = serializar_datos(codigo);
 	paquete = deserializar_paquete(cadenaSerializada);
 	CU_ASSERT_STRING_EQUAL(paquete->codigo,codigo);
