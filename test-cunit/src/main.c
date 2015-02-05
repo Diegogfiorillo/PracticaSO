@@ -30,6 +30,7 @@ void test_serializacion()
 	paquete = deserializar_paquete(cadenaSerializada);
 	CU_ASSERT_STRING_EQUAL(paquete->codigo,codigo);
 	CU_ASSERT_EQUAL(paquete->size,17);
+	limpiarPaquete();
 }
 
 void agregar_tests() {
