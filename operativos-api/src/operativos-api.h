@@ -35,7 +35,7 @@ typedef struct
 }package;
 
 //Sockets
-int crearSocketServidor(char*);
+sock_t* crearSocketServidor(char*);
 int crearSocketCliente(char*, char*);
 struct sockaddr_in escucharConexiones(int);
 int aceptarConexion(struct sockaddr_in, int);
