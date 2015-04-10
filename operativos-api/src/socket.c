@@ -48,8 +48,8 @@ void _prepare_conexion(sock_t* socket, char* ip, uint32_t puerto)
 
 int32_t _refresh_port(sock_t* socket)
 {
-	int yes=1;
-	return setsockopt(socket->fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+	int32_t yes=1;
+	return setsockopt(socket->fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int32_t));
 }
 
 
