@@ -80,6 +80,83 @@ void _free_socket(sock_t* socket)
 	free(socket);
 }
 
+package_t* _create_package(void* data)
+{
+	package_t* package = malloc(sizeof(package_t));
+
+	package->size = strlen(data);
+	memcpy(package->content,data,package->size);
+
+	return package;
+}
+
+void* _serialize_package(package_t* package)
+{
+	char *serialized = malloc(package->size); //Malloc del tamaño a guardar
+
+	int offset = 0;
+	int size_to_send;
+
+	size_to_send = sizeof(u_int32_t);
+	memcpy(serialized + offset, package->size, size_to_send);
+	offset += size_to_send;
+
+	size_to_send = package->size;
+	memcpy(serialized + offset, package->content, size_to_send);
+	offset += size_to_send;
+
+	return serialized;
+}
+
+package_t* _deserialize_message(char* serialized)
+{
+	u_int32_t size;
+	int offset = 0;
+	package_t* package = malloc(sizeof(package_t));
+
+	memcpy(&size, serialized, sizeof(u_int32_t));
+	package->size = size;
+
+	offset += sizeof(u_int32_t);
+	memcpy(package->content, serialized + offset, package->size);
+
+	return package;
+}
+
+int32_t _send_bytes(sock_t* socket, void* buffer, u_int32_t len)          //me aseguro que se envie toda la informacion
+{
+    int32_t total = 0;
+    int32_t bytesLeft = len;
+    int32_t n;
+    while(total<len)
+    {
+        n = send(socket->fd, buffer+total, bytesLeft, 0);
+        if(n==-1) break;
+        total+=n;
+        bytesLeft-=n;
+    }
+    len = total;
+    return n==-1?-1:0;
+}
+
+int32_t _receive_bytes(sock_t* sock, void* bufferSalida, uint32_t lenBuffer)
+{
+	int32_t n = 0;
+	int32_t bytesLeft = lenBuffer;
+	int32_t recibido = 0;
+
+	while(recibido < lenBuffer)
+	{
+		n = _receive(sock,bufferSalida+recibido,lenBuffer-recibido);
+		if(n==-1 || n==0) break;
+		recibido += n;
+		bytesLeft -= n;
+	}
+	lenBuffer = recibido;
+	return (n==-1 || n==0)?-1:0;
+}
+
+
 /**** FUNCIONES PUBLICAS ****/
 
 /* Funcion para crear un socket servidor */
@@ -112,7 +189,7 @@ sock_t* create_client_socket(char* ipServidor, uint32_t puertoServidor)
 
 /* Conecta un cliente al socket servidor */
 
-int32_t connect(sock_t* socket)
+int32_t connect_to_server(sock_t* socket)
 {
 	return connect(socket->fd, (struct sockaddr *)socket->sockaddr, sizeof(struct sockaddr));
 }
@@ -128,7 +205,7 @@ int32_t listen_connections(sock_t* socket)
 
 sock_t* accept_connection(sock_t* socket)
 {
-	sock_t* sock_nuevo = _crear_socket();
+	sock_t* sock_nuevo = _create_socket();
 
 	uint32_t i = sizeof(struct sockaddr_in);
 
@@ -137,35 +214,30 @@ sock_t* accept_connection(sock_t* socket)
 	return sock_nuevo->fd == -1?NULL:sock_nuevo;
 }
 
-int32_t send_bytes(sock_t* socket, void* buffer, u_int32_t len)          //me aseguro que se envie toda la informacion
+int32_t send_msg(sock_t* sock, void* msg)
 {
-    int32_t total = 0;
-    int32_t bytesLeft = len;
-    int32_t n;
-    while(total<len)
-    {
-        n = send(socket->fd, buffer+total, bytesLeft, 0);
-        if(n==-1) break;
-        total+=n;
-        bytesLeft-=n;
-    }
-    len = total;
-    return n==-1?-1:0;
+	package_t* package = _create_package(msg);
+
+	_serialize_package(package);
+
+	int32_t n = _send_bytes(sock, package->content, package->size);
+
+	return n==-1?-1:0;
 }
 
-int32_t receive_bytes(sock_t* sock, void* bufferSalida, uint32_t lenBuffer)
+package_t* receive_msg(sock_t* sock, void* output)
 {
-	int32_t n = 0;
-	int32_t bytesLeft = lenBuffer;
-	int32_t recibido = 0;
+	int32_t n = _receive_bytes(sock,output,strlen(output));
 
-	while(recibido < lenBuffer)
-	{
-		n = _receive(sock,bufferSalida+recibido,lenBuffer-recibido);
-		if(n==-1 || n==0) break;
-		recibido += n;
-		bytesLeft -= n;
-	}
-	lenBuffer = recibido;
-	return (n==-1 || n==0)?-1:0;
+	if(n==-1) return NULL;
+
+	package_t* package = _deserialize_message(output);
+
+	return package;
+}
+
+void clean_socket(sock_t* sock)
+{
+	_close_socket(sock);
+	_free_socket(sock);
 }

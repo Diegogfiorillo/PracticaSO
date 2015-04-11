@@ -13,8 +13,8 @@
 #include <netinet/in.h>
 
 
+
 #define CANTIDAD_CONEXIONES_LISTEN 20
-#define CABECERA_VALIDA 666
 
 typedef struct sock
 {
@@ -22,6 +22,13 @@ typedef struct sock
 	struct sockaddr_in* sockaddr;
 
 } sock_t;
+
+typedef struct paquete
+{
+	int32_t size;
+	void* content;
+
+}package_t;
 
 /* FUNCIONES PRIVADAS */
 
@@ -51,7 +58,7 @@ int32_t _bind_port(sock_t*);
  * Envia un mensaje a traves del socket
  * Devuelve la cantidad de bytes que se enviaron realmente, o -1 en caso de error
  */
-int32_t _send(sock_t*, char*, uint32_t);
+int32_t _send(sock_t*, void*, uint32_t);
 
 /**
  * Lee un mensaje y lo almacena en buff
@@ -69,8 +76,39 @@ void _close_socket(sock_t* );
  */
 void _free_socket(sock_t*);
 
+/*
+ * Crea un paquete con el codigo dado y le agrega su tamaño
+ */
+package_t* _create_package(void*);
 
-/***FUNCIONES PUBLICAS***/
+/*
+ * Serializa un paquete, retorna el tamaño y su contenido compactado
+ */
+void* _serialize_package(package_t*);
+
+/*
+ * Deserializa un mensaje obteniendo el contenido y su correspondiente tamaño y los retorna en un paquete
+ */
+package_t* _deserialize_message(char*);
+
+
+/**
+ * Trata de enviar el mensaje completo, aunque este sea muy grande.
+ * Deja en len la cantidad de bytes NO enviados
+ * Devuelve 0 en caso de exito, o -1 si falla
+ */
+int32_t _send_bytes(sock_t*, void*, uint32_t);
+
+
+/**
+ * Trata de recibir el mensaje completo, aunque este se envie en varias rafagas.
+ * Deja en len la cantidad de bytes NO recibidos
+ * Devuelve 0 en caso de exito; o -1 si falla
+ */
+int32_t _receive_bytes(sock_t*, void*, uint32_t);
+
+
+/*** FUNCIONES PUBLICAS ***/
 
 /**
  * Crea un socket para recibir mensajes.
@@ -95,12 +133,12 @@ sock_t* create_client_socket(char*, uint32_t);
  * @RETURNS: -1 en caso de error
  * NOTA: Recordar que es una funcion bloqueante
  */
-int32_t connect(sock_t*);
+int32_t connect_to_server(sock_t*);
 
 /**
  * Establece el socket para escuchar
- * TODO: Esta funcion podria incluirse en crear_socket_escuchador ya que no es bloqueante
  *
+ *	NOTA: Esta funcion es NO bloqueante
  * @RETURNS: -1 en caso de error
  */
 int32_t listen_connections(sock_t*);
@@ -113,20 +151,22 @@ int32_t listen_connections(sock_t*);
  */
 sock_t* accept_connection(sock_t*);
 
-
-/**
- * Trata de enviar todo el mensaje, aunque este sea muy grande.
- * Deja en len la cantidad de bytes NO enviados
- * Devuelve 0 en caso de exito, o -1 si falla
+/*
+ * Realiza el envio de un mensaje,
+ * La funcion recibe el socket destino, y el mensaje (informacion) que se decia enviar
  */
-int32_t send_bytes(sock_t*, void*, uint32_t*);
+int32_t send_msg(sock_t*, void*);
 
-
-/**
- * Trata de recibir todo el mensaje, aunque este se envie en varias rafagas.
- * Deja en len la cantidad de bytes NO recibidos
- * Devuelve 0 en caso de exito; o -1 si falla
+/*
+ * Realiza la recepcion de un mensaje,
+ * La funcion recibe el socket emisor del mensaje, y el buffer donde se colocara el mensaje recibido
  */
-int32_t receive_bytes(sock_t*, void*, uint32_t);
+package_t* receive_msg(sock_t*, void*);
+
+/*
+ * Cierra y libera el espacio ocupado por el socket en memoria
+ */
+void clean_socket(sock_t*);
+
 
 #endif /* SOCKETS_H_ */
