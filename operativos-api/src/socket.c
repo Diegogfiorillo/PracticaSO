@@ -79,7 +79,7 @@ void _free_socket(sock_t* socket)
 	free(socket);
 }
 
-package_t* _create_package(char* data)
+package_t* _create_package(void* data)
 {
 	package_t* package = malloc(sizeof(package_t));
 
@@ -233,7 +233,14 @@ int32_t send_msg(sock_t* sock, void* msg)
 	return n==-1?-1:0;
 }
 
-package_t* receive_msg(sock_t* sock, char* output, int32_t len)
+int32_t send_struct(sock_t* sock, void* pack, int32_t len_pack)
+{
+	int32_t n = _send_bytes(sock,pack,len_pack);
+
+	return n==-1?-1:0;
+}
+
+package_t* receive_msg(sock_t* sock, void* output, int32_t len)
 {
 	int32_t n = _receive_bytes(sock,output,len);
 
@@ -242,6 +249,15 @@ package_t* receive_msg(sock_t* sock, char* output, int32_t len)
 	package_t* package = _deserialize_message(output);
 
 	return package;
+}
+
+int32_t receive_struct(sock_t* sock, void* pack, int32_t len_pack)
+{
+	int32_t n = _receive_bytes(sock, pack, len_pack);
+
+	if(n==-1) return NULL;
+
+	return n;
 }
 
 void clean_socket(sock_t* sock)

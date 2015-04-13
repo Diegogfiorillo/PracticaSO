@@ -80,7 +80,7 @@ void _free_socket(sock_t*);
 /*
  * Crea un paquete con el codigo dado y le agrega su tamaño
  */
-package_t* _create_package(char*);
+package_t* _create_package(void*);
 
 /*
  * Funcion que me retorna el tamaño standard de un paquete (tamaño mas codigo)
@@ -164,10 +164,22 @@ sock_t* accept_connection(sock_t*);
 int32_t send_msg(sock_t*, void*);
 
 /*
+ * Realiza el envio de una estructura compactada en memoria
+ */
+int32_t send_struct(sock_t*, void*, int32_t);
+
+/*
  * Realiza la recepcion de un mensaje,
  * La funcion recibe el socket emisor del mensaje, y el buffer donde se colocara el mensaje recibido
  */
-package_t* receive_msg(sock_t*, char*, int32_t);
+package_t* receive_msg(sock_t*, void*, int32_t);
+
+/*
+ * Realiza la recepcion de una estructra compactada en memoria
+ * NOTA: debe tener el attribute_packed
+ */
+int32_t receive_struct(sock_t*, void*, int32_t);
+
 
 /*
  * Cierra y libera el espacio ocupado por el socket en memoria
