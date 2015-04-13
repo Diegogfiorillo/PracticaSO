@@ -8,6 +8,7 @@
 #define SOCKETS_H_
 
 #include <stdint.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -79,7 +80,12 @@ void _free_socket(sock_t*);
 /*
  * Crea un paquete con el codigo dado y le agrega su tamaño
  */
-package_t* _create_package(void*);
+package_t* _create_package(char*);
+
+/*
+ * Funcion que me retorna el tamaño standard de un paquete (tamaño mas codigo)
+ */
+int32_t _package_size(package_t*);
 
 /*
  * Serializa un paquete, retorna el tamaño y su contenido compactado
@@ -161,7 +167,7 @@ int32_t send_msg(sock_t*, void*);
  * Realiza la recepcion de un mensaje,
  * La funcion recibe el socket emisor del mensaje, y el buffer donde se colocara el mensaje recibido
  */
-package_t* receive_msg(sock_t*, void*);
+package_t* receive_msg(sock_t*, char*, int32_t);
 
 /*
  * Cierra y libera el espacio ocupado por el socket en memoria

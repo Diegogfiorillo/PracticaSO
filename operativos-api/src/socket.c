@@ -23,10 +23,9 @@ sock_t* _create_socket()
 	sock->sockaddr = (struct sockaddr_in*) malloc(sizeof(struct sockaddr));
 
 	sock->fd = socket(AF_INET, SOCK_STREAM, 0);
-	if(sock==-1){
-	      sleep(3);
+	if(sock->fd==-1){
 	      printf("Error en la creacion del socket, volviendo a intentar..");
-	      sock = socket(AF_INET, SOCK_STREAM, 0);
+	      sock->fd = socket(AF_INET, SOCK_STREAM, 0);
 	  }
 
 	return sock;
@@ -80,25 +79,31 @@ void _free_socket(sock_t* socket)
 	free(socket);
 }
 
-package_t* _create_package(void* data)
+package_t* _create_package(char* data)
 {
 	package_t* package = malloc(sizeof(package_t));
 
 	package->size = strlen(data);
-	memcpy(package->content,data,package->size);
+	package->content = malloc(package->size);
+	strcpy(package->content,data);
 
 	return package;
 }
 
+int32_t _package_size(package_t* package)
+{
+	return package->size + sizeof(int32_t);
+}
+
 void* _serialize_package(package_t* package)
 {
-	char *serialized = malloc(package->size); //Malloc del tamaño a guardar
+	char *serialized = malloc(_package_size(package)); //Malloc del tamaño a guardar
 
-	int offset = 0;
-	int size_to_send;
+	int32_t offset = 0;
+	int32_t size_to_send;
 
 	size_to_send = sizeof(u_int32_t);
-	memcpy(serialized + offset, package->size, size_to_send);
+	memcpy(serialized + offset, &(package->size), size_to_send);
 	offset += size_to_send;
 
 	size_to_send = package->size;
@@ -111,13 +116,14 @@ void* _serialize_package(package_t* package)
 package_t* _deserialize_message(char* serialized)
 {
 	u_int32_t size;
-	int offset = 0;
+	int32_t offset = 0;
 	package_t* package = malloc(sizeof(package_t));
 
 	memcpy(&size, serialized, sizeof(u_int32_t));
 	package->size = size;
 
 	offset += sizeof(u_int32_t);
+	package->content = malloc(package->size);
 	memcpy(package->content, serialized + offset, package->size);
 
 	return package;
@@ -218,16 +224,18 @@ int32_t send_msg(sock_t* sock, void* msg)
 {
 	package_t* package = _create_package(msg);
 
-	_serialize_package(package);
+	void* serialized = _serialize_package(package);
 
-	int32_t n = _send_bytes(sock, package->content, package->size);
+	int32_t serialized_lenght = _package_size(package);
+
+	int32_t n = _send_bytes(sock, serialized, serialized_lenght);
 
 	return n==-1?-1:0;
 }
 
-package_t* receive_msg(sock_t* sock, void* output)
+package_t* receive_msg(sock_t* sock, char* output, int32_t len)
 {
-	int32_t n = _receive_bytes(sock,output,strlen(output));
+	int32_t n = _receive_bytes(sock,output,len);
 
 	if(n==-1) return NULL;
 
