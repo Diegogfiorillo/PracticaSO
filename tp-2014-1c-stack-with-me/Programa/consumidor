@@ -1,0 +1,13 @@
+#!./ProcesoPrograma
+
+begin	
+	:etiqueta
+
+	wait c
+		print !colas
+	signal b
+
+	#Ciclar indefinidamente
+	goto etiqueta
+
+end
